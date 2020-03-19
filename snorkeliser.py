@@ -48,7 +48,7 @@ def has_company(x):
         return ABSTAIN
 
 
-lfs = [ai_positive,proceedings,generative,has_nuclear,is_social,has_synthesis,has_company]
+lfs = [ai_positive,proceedings,generative,has_synthesis,has_company]
 
 applier = PandasLFApplier(lfs=lfs)
 processed_data = applier.apply(data)
