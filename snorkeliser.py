@@ -8,9 +8,10 @@ from ArxivScraper import ArxivScraper
 from snorkel.labeling.lf import labeling_function
 from snorkel.labeling import PandasLFApplier, LFAnalysis
 
-scraper = ArxivScraper(max_results=1000,write_csv=True)
+scraper = ArxivScraper(search_terms=["machine","learning","neural","networks"],max_results=10000,write_csv=True)
 data = scraper.scrape()
-
+print(len(data))
+data=data.sample(frac=1)
 POSITIVE = 1
 NEGATIVE = 0
 ABSTAIN = -1
@@ -43,7 +44,7 @@ def has_synthesis(x):
 @nlp_labeling_function()
 def has_company(x):
     if any([ent.label_=="ORG" for ent in x.doc.ents]):
-        return NEGATIVE
+        return POSITIVE
     else:
         return ABSTAIN
 
@@ -57,14 +58,24 @@ logging.info("applied labelling functions to scraped data")
 print(LFAnalysis(L=processed_data,lfs=lfs).lf_summary())
 
 from snorkel.labeling import MajorityLabelVoter
+from snorkel.labeling import LabelModel
+
+label_model = LabelModel(cardinality=2, verbose=True)
+label_model.fit(L_train=processed_data, n_epochs=500, log_freq=100, seed=123)
 
 majority_model = MajorityLabelVoter()
 preds_train = majority_model.predict(L=processed_data)
+pred_LM_train = label_model.predict(processed_data)
 logging.info("generated noisy labels")
 logging.info("writting to DataFrame")
 import pandas as pd
 pred_frame = pd.DataFrame(data ={'title':data['title'],'Prediction':preds_train})
 print(pred_frame['Prediction'].value_counts(normalize=True))
+pred_frame2 = pd.DataFrame(data ={'title':data['title'],'Prediction':pred_LM_train})
 
 filter = pred_frame['Prediction']==1
+filter2 = pred_frame2['Prediction']==1
+print("Majority Label Voting :")
 print(pred_frame.loc[filter])
+print("Label Model Voting :" )
+print(pred_frame2.loc[filter2])

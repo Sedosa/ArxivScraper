@@ -20,16 +20,19 @@ class ArxivScraper:
     -----------------
     search_terms : A List of search terms - List
     max_results : Number of results you want returned  - int
-    write_csv : Boolean for whether you want to write the query results to a csv in th elocal directory - Boolean
+    write_csv : For whether you want to write the query results to a csv in the local directory - Boolean
     '''
 
     def __init__(self, search_terms=["neural","network"],max_results = 100, write_csv=False): 
-
+        self.search_terms = search_terms
         self.query_string = 'http://export.arxiv.org/api/query?search_query=all:'
-        self.query_string = ''.join([self.query_string+ "+"+search_terms[i] for i in range(len(search_terms)) if i >0])
+        self.search_string=""
+        self.search_string = ''.join([self.search_string + "+" + self.search_terms[i] if i> 0  else self.search_string + self.search_terms[0] for i in range(len(self.search_terms))])
+        self.query_string = self.query_string+ "+"+ self.search_string
         self.max_results = max_results
         self.query_string = self.query_string + f"&max_results={self.max_results}"
         self.write_csv = write_csv
+        print(self.query_string)
     
     def scrape(self):
         '''
