@@ -7,11 +7,14 @@ sys.path.insert(0,os.getcwd())
 from ArxivScraper import ArxivScraper
 from snorkel.labeling.lf import labeling_function
 from snorkel.labeling import PandasLFApplier, LFAnalysis
+from snorkel.labeling import MajorityLabelVoter
+from snorkel.labeling import LabelModel
+
+import pandas as pd
 
 scraper = ArxivScraper(search_terms=["machine","learning","neural","networks"],max_results=10000,write_csv=True)
 data = scraper.scrape()
-print(len(data))
-data=data.sample(frac=1)
+
 POSITIVE = 1
 NEGATIVE = 0
 ABSTAIN = -1
@@ -39,7 +42,7 @@ def generative(x):
 
 @labeling_function()
 def has_synthesis(x):
-    return POSITIVE if any([s==x.text.lower() for s in ['sythesis','sampling','data generation']]) else ABSTAIN
+    return POSITIVE if any([s==x.text.lower() for s in ['synthesis','sampling','data generation']]) else ABSTAIN
 
 @nlp_labeling_function()
 def has_company(x):
@@ -57,9 +60,6 @@ processed_data = applier.apply(data)
 logging.info("applied labelling functions to scraped data")
 print(LFAnalysis(L=processed_data,lfs=lfs).lf_summary())
 
-from snorkel.labeling import MajorityLabelVoter
-from snorkel.labeling import LabelModel
-
 label_model = LabelModel(cardinality=2, verbose=True)
 label_model.fit(L_train=processed_data, n_epochs=500, log_freq=100, seed=123)
 
@@ -68,7 +68,7 @@ preds_train = majority_model.predict(L=processed_data)
 pred_LM_train = label_model.predict(processed_data)
 logging.info("generated noisy labels")
 logging.info("writting to DataFrame")
-import pandas as pd
+
 pred_frame = pd.DataFrame(data ={'title':data['title'],'Prediction':preds_train})
 print(pred_frame['Prediction'].value_counts(normalize=True))
 pred_frame2 = pd.DataFrame(data ={'title':data['title'],'Prediction':pred_LM_train})
@@ -79,3 +79,6 @@ print("Majority Label Voting :")
 print(pred_frame.loc[filter])
 print("Label Model Voting :" )
 print(pred_frame2.loc[filter2])
+
+pred_frame.loc[filter].to_csv("MajoritylModelResults.csv")
+pred_frame2.loc[filter2].to_csv("LabelModelResults.csv")
