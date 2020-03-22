@@ -11,8 +11,11 @@ from snorkel.labeling import PandasLFApplier, LFAnalysis
 from snorkel.labeling import MajorityLabelVoter
 from snorkel.labeling import LabelModel
 import spacy
-
 import pandas as pd
+
+###############################################################
+## SCRAPE DATA FROM ARXIV
+###############################################################
 
 scraper = ArxivScraper(search_terms=["machine","learning","neural","networks"],max_results=1000,write_csv=True)
 data = scraper.scrape()
@@ -21,7 +24,11 @@ train_set = data.iloc[:(math.floor(2*len(data)/3))]
 POSITIVE = 1
 NEGATIVE = 0
 ABSTAIN = -1
-#######################################
+
+###############################################################
+## WRITING LABELLING FUNCTIONS
+###############################################################
+
 spacy.cli.download("en_core_web_sm")
 from snorkel.preprocess.nlp import SpacyPreprocessor
 spacy = SpacyPreprocessor(text_field="text", doc_field="doc", memoize=True)
@@ -116,12 +123,19 @@ lfs = [ai_positive_lf,
         has_company_lf,
         any_ai_lf,
         has_comparison_lf]
+
 ###############################################################
+## APPYLING LABELLING FUNCTIONS TO TRAIN & DEV SETS
+###############################################################
+
 applier = PandasLFApplier(lfs=lfs)
 processed_train_data = applier.apply(data)
 processed_dev_data = applier.apply(data)
 logging.info("applied labelling functions to scraped data")
 print(LFAnalysis(L=processed_train_data,lfs=lfs).lf_summary())
+
+###############################################################
+## FITTING THE GENERATIVE MODELAND PREDICTING
 ###############################################################
 label_model = LabelModel(cardinality=2, verbose=True)
 label_model.fit(L_train=processed_train_data, n_epochs=500, log_freq=100, seed=123)
@@ -131,7 +145,10 @@ preds_train = majority_model.predict(L=processed_dev_data)
 pred_LM_train = label_model.predict(processed_dev_data)
 logging.info("generated noisy labels")
 logging.info("writing to DataFrame")
-#################################################################
+
+###############################################################
+## OUTPUTS
+###############################################################
 pred_frame = pd.DataFrame(data ={'title':data['title'],'Prediction':preds_train})
 print(pred_frame['Prediction'].value_counts())
 pred_frame2 = pd.DataFrame(data ={'title':data['title'],'Prediction':pred_LM_train})
