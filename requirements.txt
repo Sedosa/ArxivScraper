@@ -1,7 +1,0 @@
-snorkel
-pandas
-requests
-beautifulsoup4
-future
-spacy
-lxml

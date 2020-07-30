@@ -1,0 +1,20 @@
+name: SnorkelEnv
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pandas=1.0.5
+  - scikit-learn=0.23.1
+  - numpy=1.18.5
+  - requests
+  - pytorch==1.6.0
+  - torchvision==0.7.0
+  - cudatoolkit=10.2
+  - beautifulsoup4
+  - spacy
+  - pip
+  - pip:
+    - snorkel
+prefix: C:\Users\ALI_J\Anaconda3\envs\SnorkelEnv
