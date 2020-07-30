@@ -28,9 +28,14 @@ ABSTAIN = -1
 ## WRITING LABELLING FUNCTIONS
 ###############################################################
 
-spacy.cli.download("en_core_web_sm")
 from snorkel.preprocess.nlp import SpacyPreprocessor
-spacy = SpacyPreprocessor(text_field="text", doc_field="doc", memoize=True)
+
+try:
+    spacy = SpacyPreprocessor(text_field="text", doc_field="doc", memoize=True)
+except IOError:
+    spacy.cli.download("en_core_web_sm")
+    spacy = SpacyPreprocessor(text_field="text", doc_field="doc", memoize=True)
+
 from snorkel.labeling.lf.nlp import nlp_labeling_function
 
 def keyword_lookup(x, keywords, field, label):
