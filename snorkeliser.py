@@ -8,8 +8,7 @@ sys.path.insert(0,os.getcwd())
 from ArxivScraper import ArxivScraper
 from snorkel.labeling.lf import labeling_function,LabelingFunction
 from snorkel.labeling import PandasLFApplier, LFAnalysis
-from snorkel.labeling import MajorityLabelVoter
-from snorkel.labeling import LabelModel
+from snorkel.labeling.model import LabelModel
 import spacy
 import pandas as pd
 
@@ -136,12 +135,11 @@ print(LFAnalysis(L=processed_train_data,lfs=lfs).lf_summary())
 
 ###############################################################
 ## FITTING THE GENERATIVE MODELAND PREDICTING
+
 ###############################################################
 label_model = LabelModel(cardinality=2, verbose=True)
 label_model.fit(L_train=processed_train_data, n_epochs=500, log_freq=100, seed=123)
 
-majority_model = MajorityLabelVoter()
-preds_train = majority_model.predict(L=processed_dev_data)
 pred_LM_train = label_model.predict(processed_dev_data)
 logging.info("generated noisy labels")
 logging.info("writing to DataFrame")
@@ -149,20 +147,16 @@ logging.info("writing to DataFrame")
 ###############################################################
 ## OUTPUTS
 ###############################################################
-pred_frame = pd.DataFrame(data ={'title':data['title'],'Prediction':preds_train})
+pred_frame = pd.DataFrame(data ={'title':data['title'],'Prediction':pred_LM_train})
 print(pred_frame['Prediction'].value_counts())
-pred_frame2 = pd.DataFrame(data ={'title':data['title'],'Prediction':pred_LM_train})
 
-filter = pred_frame['Prediction']==1
-filter2 = pred_frame2['Prediction']==1
-pred_frame = pred_frame.loc[filter]
-pred_frame2 = pred_frame2.loc[filter2]
-
-print(f"Majority Label Voting :{pred_frame.shape}")
+filter_ = pred_frame['Prediction']==1
+pred_frame = pred_frame.loc[filter_]
 print(pred_frame)
+
+
 
 print(f"Label Model Voting : {pred_frame2.shape}" )
 print(pred_frame2)
 
-pred_frame.to_csv("MajoritylModelResults.csv")
 pred_frame2.to_csv("LabelModelResults.csv")
